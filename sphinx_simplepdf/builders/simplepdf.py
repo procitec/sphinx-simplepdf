@@ -181,9 +181,9 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
                     success = True
                     break
                 except subprocess.TimeoutExpired:
-                    logger.warning(f"TimeoutExpired in weasyprint, retrying")
+                    logger.info(f"TimeoutExpired in weasyprint, retrying")
                 except subprocess.CalledProcessError as e:
-                    logger.warning(
+                    logger.info(
                         f"CalledProcessError in weasyprint, retrying\n{str(e)}"
                     )
                 finally:
@@ -252,7 +252,7 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
 
             if references:
 
-                print(f"found duplicate chapters:\n{references}")
+                logger.info(f"found duplicate chapters:\n{references}")
 
             for text in references.keys():
 
