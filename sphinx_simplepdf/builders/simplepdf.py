@@ -251,7 +251,6 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
             references = {key: value for key, value in counts.items()}
 
             if references:
-
                 logger.info(f"found duplicate chapters:\n{references}")
 
             for text in references.keys():
