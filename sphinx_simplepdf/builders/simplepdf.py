@@ -340,20 +340,25 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
                             continue
 
         for heading_tag in ["h1", "h2"]:
-            headings = soup.find_all(heading_tag, class_="")
+            headings = soup.find_all(heading_tag)
             for number, heading in enumerate(headings):
                 class_attr = heading.attrs["class"] if heading.has_attr("class") else []
-                logger.debug(f"found heading {heading}")
-                if 0 == number:
-                    class_attr.append("first")
-                if 0 == number % 2:
-                    class_attr.append("even")
-                else:
-                    class_attr.append("odd")
-                if len(headings) - 1 == number:
-                    class_attr.append("last")
-
-                heading.attrs["class"] = class_attr
+                parent = heading.find_parent("section")
+                # is the parent a section
+                if parent and parent.name == 'section':
+                    prev_span = parent.find_previous_sibling('span', id=True)
+                    # check if previous sibling is span with an id
+                    if prev_span:
+                        # add classes for css handling
+                        prev_span['class'] = prev_span.get('class', []) + ['anchor-before-heading']
+                        if 0 == number:
+                            prev_span['class'] = prev_span.get('class', []) + ["first"]
+                        if 0 == number % 2:
+                            prev_span['class'] = prev_span.get('class', []) + ["even"]
+                        else:
+                            prev_span['class'] = prev_span.get('class', []) + ["odd"]
+                        if len(headings) - 1 == number:
+                            prev_span['class'] = prev_span.get('class', []) + ["last"]
 
         logger.debug("DEBUG HTML START")
         logger.debug(soup.prettify(formatter="html"))

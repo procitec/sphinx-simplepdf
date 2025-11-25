@@ -1,7 +1,7 @@
 """Tests for PDF generation with WeasyPrint."""
 import pytest
 from pathlib import Path
-from .utils import build_and_capture_stdout, extract_pdf_text
+from .utils import build_and_capture_stdout, extract_pdf_text, page_count
 
 
 def test_pdf_is_created(sphinx_build, capsys):
@@ -36,7 +36,7 @@ def test_pdf_with_images(sphinx_build, capsys):
 def test_pdf_with_toc(sphinx_build, capsys):
     """Test that PDF with table of contents is generated."""
     # result = sphinx_build(srcdir="with_toc").build()
-    result = build_and_capture_stdout(sphinx_build, capsys, srcdir="with_toc")
+    result = build_and_capture_stdout(sphinx_build, capsys, srcdir="with_toc", build_kwargs={"debug": True})
 
     assert result.pdf_exists()
     # TOC usually makes PDF larger
@@ -46,6 +46,8 @@ def test_pdf_with_toc(sphinx_build, capsys):
     # Check for specific WeasyPrint anchor warnings
     anchor_warnings = result.get_warnings_matching(r"(anchor|link|reference)")
     assert len(anchor_warnings) == 0
+
+    assert 5 == page_count(pdf_path)
 
     text = extract_pdf_text(pdf_path)
 
@@ -64,17 +66,17 @@ Chapter 2: Advanced Topics
 • Section 2.1
 • Section 2.2
 
-4
+3
+
+3
+
+3
 
 4
 
 4
 
-5
-
-5
-
-5
+4
 """ in text
 
 

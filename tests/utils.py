@@ -1,16 +1,17 @@
-import re
-from pdfminer.high_level import extract_text
+from pdfminer.high_level import extract_text, extract_pages
 from bs4 import BeautifulSoup
 
-# ANSI_ESCAPE_RE = re.compile(r'\x1b\\[[;?0-9]*[A-Za-z]?')
-#
-# def strip_ansi(text):
-#     return ANSI_ESCAPE_RE.sub('', text)
 
 def extract_pdf_text(pdf_path):
     """Extrahiere gesamten Text aus PDF."""
     return extract_text(str(pdf_path))
 
+def page_count(pdf_path):
+    """get page count of pdf"""
+    page_count = 0
+    for page_layout in extract_pages(pdf_path):
+        page_count += 1
+    return page_count
 
 def prettify_html(html):
     soup = BeautifulSoup(html, "html.parser")
