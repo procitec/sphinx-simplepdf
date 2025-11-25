@@ -1,11 +1,11 @@
 """Tests for HTML processing in SimplePDF builder."""
 import pytest
 import re
+from .utils import build_and_capture_stdout, prettify_html
 
 
-def test_html_is_processed(sphinx_build):
-    """Test that HTML is processed by SimplePDF builder."""
-    result = sphinx_build(srcdir="basic_doc").build()
+def test_html_is_processed(sphinx_build, capsys):
+    result = build_and_capture_stdout(sphinx_build, capsys, srcdir="basic_doc", build_kwargs={"debug":True})
 
     # Original HTML should exist
     original_html = result.html_content("index")
@@ -15,9 +15,10 @@ def test_html_is_processed(sphinx_build):
     # (requires SimplePDF to log processed HTML)
     try:
         processed_html = result.processed_html()
+        pretty_original = prettify_html(original_html)
         assert processed_html
-        # Processed HTML should differ from original
-        assert processed_html != original_html
+        # no toctree, no fix!
+        assert processed_html == pretty_original
     except ValueError:
         pytest.skip("SimplePDF debug output not available")
 

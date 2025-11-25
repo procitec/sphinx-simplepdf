@@ -2,10 +2,14 @@
 from pathlib import Path
 from typing import Any
 import shutil
+import io
+import re
 
 import pytest
 from sphinx.application import Sphinx
 from sphinx.testing.util import SphinxTestApp
+from sphinx.util import logging as sphinx_logging
+import logging
 
 
 pytest_plugins = ("sphinx.testing.fixtures",)
@@ -53,14 +57,17 @@ def content(request):
 class SphinxBuild:
     """Helper class to build Sphinx documentation and access results."""
 
-    def __init__(self, app: Sphinx, src: Path):
+    def __init__(self, app: Sphinx, src: Path, status, warning):
         self.app = app
         self.src = src
         self.outdir = None
         self.warnings = []
         self.errors = []
+        self.status_stream = status
+        self.warning_stream = warning
+        self.debug_output = []
 
-    def build(self, force_all: bool = True, raise_on_warning: bool = False):
+    def build(self, force_all: bool = True, raise_on_warning: bool = False, debug: bool = False):
         """
         Build the documentation.
 
@@ -68,17 +75,31 @@ class SphinxBuild:
             force_all: Rebuild all files
             raise_on_warning: Raise exception on warnings
         """
+
+        if debug:
+            self.app.verbosity = 2
+
+            debug_buffer = io.StringIO() if debug else None
+
+            # Eigenen Handler OHNE Sphinx-Filter für Debug
+            debug_handler = logging.StreamHandler(debug_buffer)
+            debug_handler.setLevel(logging.DEBUG)
+            debug_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+
+            # An Extension-Logger hängen (umgeht Sphinx-Filter!)
+            ext_logger = sphinx_logging.getLogger("sphinx_simplepdf")
+            ext_logger.logger.addHandler(debug_handler)
+            ext_logger.logger.setLevel(logging.DEBUG)
+            ext_logger.logger.propagate = False  # Verhindere Doppel-Logging
+
         self.app.build(force_all=force_all)
         self.outdir = Path(self.app.builder.outdir)
 
-        # Collect warnings and errors from status/warning streams
-        warning_content = self.app._warning.getvalue()
-        if warning_content:
-            self.warnings = [
-                line.strip()
-                for line in warning_content.split("\n")
-                if line.strip()
-            ]
+        self.status_output = self.status_stream.getvalue()
+        self.warnings = self.warning_stream.getvalue().splitlines()
+
+        if debug:
+            self.debug_output = debug_buffer.getvalue().splitlines()
 
         if raise_on_warning and self.warnings:
             raise AssertionError(
@@ -114,14 +135,20 @@ class SphinxBuild:
         """
         # Look for debug HTML output in warnings
         # (SimplePDF should log processed HTML with specific marker)
-        for i, line in enumerate(self.warnings):
+
+        def strip_log_prefix(text):
+            """Entferne Log-Level-Prefixe wie 'DEBUG: ', 'INFO: ' etc."""
+            return re.sub(r'^(DEBUG|INFO|WARNING|ERROR|CRITICAL):\s*', '', text, flags=re.MULTILINE)
+
+        # print(f"-- debug output--\n{self.debug_output}\n-----")
+        for i, line in enumerate(self.debug_output):
             if "DEBUG HTML START" in line:
                 # Find end marker
                 html_lines = []
-                for next_line in self.warnings[i+1:]:
+                for next_line in self.debug_output[i+1:]:
                     if "DEBUG HTML END" in next_line:
                         break
-                    html_lines.append(next_line)
+                    html_lines.append(strip_log_prefix(next_line))
                 return "\n".join(html_lines)
 
         raise ValueError("No processed HTML found in debug output")
@@ -228,18 +255,21 @@ def sphinx_build(make_app, tmp_path):
         if not src_path.exists():
             raise ValueError(f"Test document directory not found: {src_path}")
 
-        print(f"using src_dir {src_dir}")
+        status = io.StringIO()
+        warning = io.StringIO()
 
         # Create app with Path object (Sphinx 8.2 compatible)
         app = make_app(
             buildername=buildername,
             # srcdir=src_path,
             srcdir=src_dir,
+            status=status,
+            warning=warning,
             confoverrides=confoverrides or {},
+            freshenv = True,
             **kwargs
         )
-
-        return SphinxBuild(app, src_path)
+        return SphinxBuild(app, src_path, status, warning)
 
     return _make_build
 
