@@ -53,7 +53,7 @@ dev = [
   "tox>=4.0",
   "tox-uv>=1.0",
   "ruff>=0.4.0",
-  "pdfminer.six"
+  "pdfminer.six>=20220319"
 ]
 docs = [
   "sphinx>=4.0",
@@ -111,10 +111,29 @@ requires =
 deps =
     sphinx>=4.0
     pytest
-    pdfminer.six
+    pdfminer.six>=20220319
     sphinx-simplepdf @ .
 commands =
     pytest tests/
+
+[testenv:py{310,311,312,313}-sphinx74]
+deps =
+    sphinx>=7.4,<7.5
+    pytest
+    pdfminer.six>=20220319
+    sphinx-simplepdf @ .
+commands =
+    pytest tests/
+
+[testenv:py{310,311,312,313}-sphinx82]
+deps =
+    sphinx>=8.2,<8.3
+    pytest
+    pdfminer.six>=20220319
+    sphinx-simplepdf @ .
+commands =
+    pytest tests/
+
 
 [testenv:lint]
 description = Run code quality checks
