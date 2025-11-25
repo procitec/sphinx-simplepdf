@@ -1,7 +1,11 @@
 import sys
 import pkgutil
-import pkg_resources
 import platform
+try:
+    from importlib.metadata import version
+except ImportError:
+    from importlib_metadata import version
+
 
 class DebugPython:
 
@@ -17,11 +21,11 @@ class DebugPython:
         final = {}
         for name in names:
             try:
-                version = pkg_resources.get_distribution(name).version
+                __version__ = version(name)
             except (Exception):
                 final[name] = 'unknown'
             else:
-                final[name] = version
+                final[name] = __version__
 
         return final
 

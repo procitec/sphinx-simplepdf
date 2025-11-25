@@ -181,9 +181,9 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
                     success = True
                     break
                 except subprocess.TimeoutExpired:
-                    logger.warning(f"TimeoutExpired in weasyprint, retrying")
+                    logger.info(f"TimeoutExpired in weasyprint, retrying")
                 except subprocess.CalledProcessError as e:
-                    logger.warning(
+                    logger.info(
                         f"CalledProcessError in weasyprint, retrying\n{str(e)}"
                     )
                 finally:
@@ -218,7 +218,7 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
     """
 
     def _toctree_fix(self, html):
-        print("checking for potential toctree page numbering errors")
+        logger.info("checking for potential toctree page numbering errors")
         soup = BeautifulSoup(html, "html.parser")
         sidebar = soup.find("div", class_="sphinxsidebarwrapper")
 
@@ -251,8 +251,7 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
             references = {key: value for key, value in counts.items()}
 
             if references:
-
-                print(f"found duplicate chapters:\n{references}")
+                logger.info(f"found duplicate chapters:\n{references}")
 
             for text in references.keys():
 
@@ -356,7 +355,9 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
 
                 heading.attrs["class"] = class_attr
 
+        logger.debug("DEBUG HTML START")
         logger.debug(soup.prettify(formatter="html"))
+        logger.debug("DEBUG HTML END")
         return str(soup)
 
 
