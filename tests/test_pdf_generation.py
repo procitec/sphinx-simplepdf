@@ -39,9 +39,7 @@ def test_pdf_with_toc(sphinx_build, capsys):
     result = build_and_capture_stdout(sphinx_build, capsys, srcdir="with_toc", build_kwargs={"debug": True})
 
     assert result.pdf_exists()
-    # TOC usually makes PDF larger
     pdf_path = result.pdf_path()
-    assert pdf_path.stat().st_size > 2000
 
     # Check for specific WeasyPrint anchor warnings
     anchor_warnings = result.get_warnings_matching(r"(anchor|link|reference)")

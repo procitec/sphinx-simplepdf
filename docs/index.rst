@@ -99,6 +99,6 @@ Showcase
        directives
        css
        tech_details
-       examples/index
+       examples/sphinx_needs
        changelog
        license

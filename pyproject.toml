@@ -26,7 +26,7 @@ classifiers = [
   "Framework :: Sphinx :: Extension",
 ]
 dependencies = [
-  "sphinx>=4.0",
+  "sphinx>=7.0",
   "weasyprint>=66.0",
   "libsass",
   "beautifulsoup4",
@@ -35,7 +35,6 @@ dependencies = [
   "pillow>=9.1.0",
   "pydyf>=0.10.0",
   "cffi>=0.6",
-  "pycairo",
 ]
 
 [project.entry-points."sphinx.html_themes"]
@@ -56,11 +55,19 @@ dev = [
   "pdfminer.six>=20220319"
 ]
 docs = [
-  "sphinx>=4.0",
+  "sphinx>=7.0",
   "sphinxcontrib-plantuml",
   "sphinx-needs",
   "sphinx-copybutton",
 ]
+
+demo = [
+  "sphinx>=7.0",
+  "sphinxcontrib-plantuml",
+  "sphinx-needs",
+  "sphinx-copybutton",
+]
+
 
 [project.urls]
 Homepage = "https://github.com/useblocks/sphinx-simplepdf"
@@ -100,7 +107,7 @@ force-sort-within-sections = true
 legacy_tox_ini = """
 [tox]
 env_list =
-    py{310,311,312,313}-sphinx{74,82}
+    py{311,312,313}-sphinx{74,81,82}
     docs
     lint
 requires =
@@ -109,12 +116,12 @@ requires =
 
 [testenv]
 deps =
-    sphinx>=4.0
+    sphinx>=7.0
     pytest
     pdfminer.six>=20220319
     sphinx-simplepdf @ .
 commands =
-    pytest tests/
+    pytest {posargs:tests/}
 
 [testenv:py{310,311,312,313}-sphinx74]
 deps =
@@ -123,20 +130,32 @@ deps =
     pdfminer.six>=20220319
     sphinx-simplepdf @ .
 commands =
-    pytest tests/
+    pytest {posargs:tests/}
 
-[testenv:py{310,311,312,313}-sphinx82]
+[testenv:py{311,312,313}-sphinx81]
+deps =
+    sphinx>=8.1,<8.2
+    pytest
+    pdfminer.six>=20220319
+    sphinx-simplepdf @ .
+commands =
+    pytest {posargs:tests/}
+
+[testenv:py{311,312,313}-sphinx82]
 deps =
     sphinx>=8.2,<8.3
     pytest
     pdfminer.six>=20220319
     sphinx-simplepdf @ .
 commands =
-    pytest tests/
-
+    pytest {posargs:tests/}
 
 [testenv:lint]
 description = Run code quality checks
+allowlist_externals =
+    ruff
+deps =
+    ruff>=0.4.0
 commands =
     ruff check sphinx_simplepdf/
     ruff format --check sphinx_simplepdf/
@@ -149,7 +168,19 @@ deps =
 extras = docs
 commands =
     sphinx-build -a -E -j auto -b html docs/ docs/_build
+
+[testenv:demo]
+description = Build demo with Sphinx
+basepython = python3.12
+deps =
+    sphinx>=7.0,<8.0
+extras = demo
+commands =
+    sphinx-build -a -E -j auto -b simplepdf demo/ demo/_build
+
 """
+
+
 
 # [tool.setuptools.packages.find]
 # where = ["sphinx_simplepdf/themes/simplepdf_theme"]

@@ -342,7 +342,12 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
         for heading_tag in ["h1", "h2"]:
             headings = soup.find_all(heading_tag)
             for number, heading in enumerate(headings):
-                class_attr = heading.attrs["class"] if heading.has_attr("class") else []
+                class_attr = heading.get('class', [])
+                if 0 == number:
+                    class_attr +=["first"]
+                class_attr += [f"heading-{number}"]
+                heading['class'] = class_attr
+
                 parent = heading.find_parent("section")
                 # is the parent a section
                 if parent and parent.name == 'section':

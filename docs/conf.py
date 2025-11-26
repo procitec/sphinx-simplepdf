@@ -20,14 +20,14 @@ author = 'team useblocks'
 extensions = [
     'sphinx_simplepdf',
     'sphinxcontrib.plantuml',
-    'sphinxcontrib.needs',
+    'sphinx_needs',
     'sphinx_copybutton',
 ]
 
 version = "1.6.0"
 
 templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'if_pdf_include.rst']
 
 plantuml_output_format = "svg_img"
 local_plantuml_path = os.path.join(os.path.dirname(__file__), "utils", "plantuml.jar")
