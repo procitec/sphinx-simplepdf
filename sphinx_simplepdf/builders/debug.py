@@ -1,6 +1,5 @@
 import sys
 import pkgutil
-import pkg_resources
 import platform
 try:
     from importlib.metadata import version
