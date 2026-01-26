@@ -1,4 +1,5 @@
 """Minimal test configuration."""
+
 project = "BasicTest"
 extensions = ["sphinx_simplepdf"]
 master_doc = "index"

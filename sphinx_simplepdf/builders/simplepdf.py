@@ -1,23 +1,18 @@
 from collections import Counter
 import os
 import re
-from typing import Any, Dict
 import subprocess
-import weasyprint
-
-import sass
+from typing import Any
 
 from bs4 import BeautifulSoup
-
+import sass
 from sphinx import __version__
 from sphinx.application import Sphinx
-
 from sphinx.builders.singlehtml import SingleFileHTMLBuilder
+from sphinx.util import logging
+import weasyprint
 
 from sphinx_simplepdf.builders.debug import DebugPython
-
-from sphinx.util import logging
-
 from sphinx_simplepdf.writers.simplepdf import SimplepdfTranslator
 
 logger = logging.getLogger(__name__)
@@ -53,17 +48,13 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
             "srcdir": self.app.srcdir,
             "outdir": self.app.outdir,
             "extensions": self.app.config.extensions,
-            "simple_config": {
-                x.name: x.value
-                for x in self.app.config
-                if x.name.startswith("simplepdf")
-            },
+            "simple_config": {x.name: x.value for x in self.app.config if x.name.startswith("simplepdf")},
         }
         self.app.config.html_context["spd"] = debug_sphinx
 
         # Generate main.css
         logger.info("Generating css files from scss-templates")
-        css_folder = os.path.join(self.app.outdir, f"_static")
+        css_folder = os.path.join(self.app.outdir, "_static")
         scss_folder = os.path.join(
             os.path.dirname(__file__),
             "..",
@@ -78,9 +69,7 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
             output_style="nested",
             custom_functions={
                 sass.SassFunction("config", ("$a", "$b"), self.get_config_var),
-                sass.SassFunction(
-                    "theme_option", ("$a", "$b"), self.get_theme_option_var
-                ),
+                sass.SassFunction("theme_option", ("$a", "$b"), self.get_theme_option_var),
             },
         )
 
@@ -122,24 +111,22 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
         index_path = os.path.join(self.app.outdir, f"{self.app.config.root_doc}.html")
 
         # Manipulate index.html
-        with open(index_path, "rt", encoding="utf-8") as index_file:
+        with open(index_path, encoding="utf-8") as index_file:
             index_html = "".join(index_file.readlines())
 
         new_index_html = self._toctree_fix(index_html)
 
-        with open(index_path, "wt", encoding="utf-8") as index_file:
+        with open(index_path, "w", encoding="utf-8") as index_file:
             index_file.writelines(new_index_html)
 
         args = ["weasyprint"]
 
         if isinstance(self.config["simplepdf_weasyprint_flags"], list) and (
-            0 < len(self.config["simplepdf_weasyprint_flags"])
+            len(self.config["simplepdf_weasyprint_flags"]) > 0
         ):
             args.extend(self.config["simplepdf_weasyprint_flags"])
 
-        file_name = (
-            self.app.config.simplepdf_file_name or f"{self.app.config.project}.pdf"
-        )
+        file_name = self.app.config.simplepdf_file_name or f"{self.app.config.project}.pdf"
 
         args.extend(
             [
@@ -151,9 +138,7 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
         timeout = self.config["simplepdf_weasyprint_timeout"]
 
         filter_list = self.config["simplepdf_weasyprint_filter"]
-        filter_pattern = (
-            "(?:% s)" % "|".join(filter_list) if 0 < len(filter_list) else None
-        )
+        filter_pattern = "(?:{})".format("|".join(filter_list)) if len(filter_list) > 0 else None
 
         if self.config["simplepdf_use_weasyprint_api"]:
             doc = weasyprint.HTML(index_path)
@@ -167,30 +152,22 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
             success = False
             for n in range(1 + retries):
                 try:
-                    wp_out = subprocess.check_output(
-                        args, timeout=timeout, text=True, stderr=subprocess.STDOUT
-                    )
+                    wp_out = subprocess.check_output(args, timeout=timeout, text=True, stderr=subprocess.STDOUT)
 
                     for line in wp_out.splitlines():
-                        if filter_pattern is not None and re.match(
-                            filter_pattern, line
-                        ):
+                        if filter_pattern is not None and re.match(filter_pattern, line):
                             pass
                         else:
                             print(line)
                     success = True
                     break
                 except subprocess.TimeoutExpired:
-                    logger.info(f"TimeoutExpired in weasyprint, retrying")
+                    logger.info("TimeoutExpired in weasyprint, retrying")
                 except subprocess.CalledProcessError as e:
-                    logger.info(
-                        f"CalledProcessError in weasyprint, retrying\n{str(e)}"
-                    )
+                    logger.info(f"CalledProcessError in weasyprint, retrying\n{e!s}")
                 finally:
                     if (n == retries - 1) and not success:
-                        raise RuntimeError(
-                            f"maximum number of retries {retries} failed in weasyprint"
-                        )
+                        raise RuntimeError(f"maximum number of retries {retries} failed in weasyprint")
 
     """
     attempts to fix cases where a document has multiple chapters that have the same name.
@@ -227,9 +204,7 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
             toc_links = sidebar.find_all("a", class_="reference internal")
 
             # find max toctree lvl
-            toctree_lvls = set(
-                sidebar.find_all("li", class_=re.compile("toctree-l[1-9]"))
-            )
+            toctree_lvls = set(sidebar.find_all("li", class_=re.compile("toctree-l[1-9]")))
 
             max_toctree_lvl = 0
 
@@ -242,28 +217,21 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
 
             # remove document file reference
             for toc_link in toc_links:
-                toc_link["href"] = toc_link["href"].replace(
-                    f"{self.app.config.root_doc}.html", ""
-                )
+                toc_link["href"] = toc_link["href"].replace(f"{self.app.config.root_doc}.html", "")
 
             # search for duplicates
             counts = dict(Counter([str(x).split(">")[0] for x in toc_links]))
-            references = {key: value for key, value in counts.items()}
+            references = dict(counts.items())
 
             if references:
                 logger.info(f"found duplicate chapters:\n{references}")
 
-            for text in references.keys():
-
+            for text in references:
                 ref = re.findall('href="#.*"', str(text))
 
                 # clean href data for searching
-                cleaned_ref_toc = (
-                    ref[0].replace('href="', "").replace('"', "")
-                )  # "#target"
-                cleaned_ref_target = (
-                    ref[0].replace('href="#', "").replace('"', "")
-                )  # "target"
+                cleaned_ref_toc = ref[0].replace('href="', "").replace('"', "")  # "#target"
+                cleaned_ref_target = ref[0].replace('href="#', "").replace('"', "")  # "target"
 
                 occurences = soup.find_all("section", attrs={"id": cleaned_ref_target})
 
@@ -271,9 +239,8 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
                 # occurence-0, occurence-1, occurence-2 ...
                 if len(occurences) > 1:
                     occ_counter = 0
-                    for occ in occurences:
+                    for occ_counter, occ in enumerate(occurences):
                         occ["id"] = occ["id"] + "-" + str(occ_counter)
-                        occ_counter += 1
 
                 else:
                     continue
@@ -289,11 +256,9 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
                     if toc_link["href"] == cleaned_ref_toc:
                         # edit toctree reference
                         try:
-
                             match_found = False
 
                             for j in range(replace_counter, len(occurences)):
-
                                 if match_found:
                                     break
 
@@ -307,10 +272,10 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
                                     # find headline of chapter
                                     if name and re.search("h[1-9]", name):
                                         try:
-                                            e_class = element.contents[0].attrs[
-                                                "class"
-                                            ][0]
+                                            e_class = element.contents[0].attrs["class"][0]
                                         except KeyError:
+                                            continue
+                                        except AttributeError:
                                             continue
 
                                         if e_class == "section-number":
@@ -318,10 +283,7 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
 
                                             # if headlinelevel either is max_toctree lvl or + 1 the chapter should be included in the toc
                                             # break both loops and edit occurrence via repalce_counter
-                                            if (
-                                                target_lvl == max_toctree_lvl + 1
-                                                or target_lvl == max_toctree_lvl
-                                            ):
+                                            if target_lvl == max_toctree_lvl + 1 or target_lvl == max_toctree_lvl:
                                                 match_found = True
                                                 break  # headline match found
 
@@ -331,9 +293,7 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
                                                 continue
 
                             # edit target of toc reference with correct occurence
-                            toc_link["href"] = (
-                                toc_link["href"] + "-" + str(replace_counter)
-                            )
+                            toc_link["href"] = toc_link["href"] + "-" + str(replace_counter)
                             replace_counter += 1
 
                         except IndexError:
@@ -342,28 +302,28 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
         for heading_tag in ["h1", "h2"]:
             headings = soup.find_all(heading_tag)
             for number, heading in enumerate(headings):
-                class_attr = heading.get('class', [])
-                if 0 == number:
-                    class_attr +=["first"]
+                class_attr = heading.get("class", [])
+                if number == 0:
+                    class_attr += ["first"]
                 class_attr += [f"heading-{number}"]
-                heading['class'] = class_attr
+                heading["class"] = class_attr
 
                 parent = heading.find_parent("section")
                 # is the parent a section
-                if parent and parent.name == 'section':
-                    prev_span = parent.find_previous_sibling('span', id=True)
+                if parent and parent.name == "section":
+                    prev_span = parent.find_previous_sibling("span", id=True)
                     # check if previous sibling is span with an id
                     if prev_span:
                         # add classes for css handling
-                        prev_span['class'] = prev_span.get('class', []) + ['anchor-before-heading']
-                        if 0 == number:
-                            prev_span['class'] = prev_span.get('class', []) + ["first"]
-                        if 0 == number % 2:
-                            prev_span['class'] = prev_span.get('class', []) + ["even"]
+                        prev_span["class"] = [*prev_span.get("class", []), "anchor-before-heading"]
+                        if number == 0:
+                            prev_span["class"] = [*prev_span.get("class", []), "first"]
+                        if number % 2 == 0:
+                            prev_span["class"] = [*prev_span.get("class", []), "even"]
                         else:
-                            prev_span['class'] = prev_span.get('class', []) + ["odd"]
+                            prev_span["class"] = [*prev_span.get("class", []), "odd"]
                         if len(headings) - 1 == number:
-                            prev_span['class'] = prev_span.get('class', []) + ["last"]
+                            prev_span["class"] = [*prev_span.get("class", []), "last"]
 
         logger.debug("DEBUG HTML START")
         logger.debug(soup.prettify(formatter="html"))
@@ -371,7 +331,7 @@ class SimplePdfBuilder(SingleFileHTMLBuilder):
         return str(soup)
 
 
-def setup(app: Sphinx) -> Dict[str, Any]:
+def setup(app: Sphinx) -> dict[str, Any]:
     app.add_config_value("simplepdf_vars", {}, "html", types=[dict])
     app.add_config_value("simplepdf_file_name", None, "html", types=[str])
     app.add_config_value("simplepdf_debug", False, "html", types=bool)
@@ -382,9 +342,7 @@ def setup(app: Sphinx) -> Dict[str, Any]:
     app.add_config_value("simplepdf_use_weasyprint_api", None, "html", types=[bool])
     app.add_config_value("simplepdf_theme", "simplepdf_theme", "html", types=[str])
     app.add_config_value("simplepdf_theme_options", {}, "html", types=[dict])
-    app.add_config_value(
-        "simplepdf_sidebars", {"**": ["localtoc.html"]}, "html", types=[dict]
-    )
+    app.add_config_value("simplepdf_sidebars", {"**": ["localtoc.html"]}, "html", types=[dict])
     app.add_builder(SimplePdfBuilder)
 
     return {

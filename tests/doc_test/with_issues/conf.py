@@ -1,4 +1,5 @@
 """Configuration for testing error/warning handling."""
+
 project = "IssuesTest"
 extensions = ["sphinx_simplepdf"]
 master_doc = "index"

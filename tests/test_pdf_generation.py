@@ -1,6 +1,7 @@
 """Tests for PDF generation with WeasyPrint."""
+
 import pytest
-from pathlib import Path
+
 from .utils import build_and_capture_stdout, extract_pdf_text, page_count
 
 
@@ -45,11 +46,12 @@ def test_pdf_with_toc(sphinx_build, capsys):
     anchor_warnings = result.get_warnings_matching(r"(anchor|link|reference)")
     assert len(anchor_warnings) == 0
 
-    assert 5 == page_count(pdf_path)
+    assert page_count(pdf_path) == 5
 
     text = extract_pdf_text(pdf_path)
 
-    assert """
+    assert (
+        """
 Table of Contents
 
 Contents:
@@ -75,15 +77,16 @@ Chapter 2: Advanced Topics
 4
 
 4
-""" in text
+"""
+        in text
+    )
 
 
 @pytest.mark.parametrize("page_format", ["A4", "Letter", "A5"])
 def test_pdf_different_page_formats(sphinx_build, capsys, page_format):
     """Test PDF generation with different page formats."""
-    result = build_and_capture_stdout(sphinx_build, capsys,
-        srcdir="basic_doc",
-        confoverrides={"simplepdf_page_size": page_format}
+    result = build_and_capture_stdout(
+        sphinx_build, capsys, srcdir="basic_doc", confoverrides={"simplepdf_page_size": page_format}
     )
 
     assert result.pdf_exists()

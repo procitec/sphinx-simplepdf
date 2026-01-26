@@ -1,11 +1,7 @@
-from docutils import nodes
-from docutils.parsers.rst import Directive
-
-
-from docutils import nodes
 from pathlib import Path
+from typing import ClassVar
 
-
+from docutils.parsers.rst import Directive
 from sphinx.util import logging
 
 logger = logging.getLogger(__name__)
@@ -15,11 +11,12 @@ class IfIncludeDirective(Directive):
     """
     Directive to add a file based on builder.
     """
+
     has_content = True
     required_arguments = 1
     optional_arguments = 0
     final_argument_whitespace = True
-    option_spec = {}
+    option_spec: ClassVar[dict] = {}
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
@@ -38,18 +35,15 @@ class IfIncludeDirective(Directive):
         builder = self.arguments[0]
 
         if self.env.app.builder.name.upper() == builder.upper():
-
             include_list = self.content
 
             # files get added in reversed order, probable cause is static target in doc, inserting element 1 at line
             # xy and then inserting element 2 at line xy leads to element 2 being in front of element 1
             # solution -> reverse list
             for file in reversed(include_list):
-
                 file = Path(file)
-                self.state_machine.insert_input([".. include:: " + str(file)],
-                                                self.state_machine.document.attributes["source"])
+                self.state_machine.insert_input(
+                    [".. include:: " + str(file)], self.state_machine.document.attributes["source"]
+                )
 
         return []
-
-

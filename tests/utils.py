@@ -1,17 +1,19 @@
-from pdfminer.high_level import extract_text, extract_pages
 from bs4 import BeautifulSoup
+from pdfminer.high_level import extract_pages, extract_text
 
 
 def extract_pdf_text(pdf_path):
     """Extrahiere gesamten Text aus PDF."""
     return extract_text(str(pdf_path))
 
+
 def page_count(pdf_path):
     """get page count of pdf"""
     page_count = 0
-    for page_layout in extract_pages(pdf_path):
+    for _page_layout in extract_pages(pdf_path):
         page_count += 1
     return page_count
+
 
 def prettify_html(html):
     soup = BeautifulSoup(html, "html.parser")

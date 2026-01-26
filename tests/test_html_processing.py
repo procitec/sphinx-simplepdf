@@ -1,11 +1,12 @@
 """Tests for HTML processing in SimplePDF builder."""
+
 import pytest
-import re
+
 from .utils import build_and_capture_stdout, prettify_html
 
 
 def test_html_is_processed(sphinx_build, capsys):
-    result = build_and_capture_stdout(sphinx_build, capsys, srcdir="basic_doc", build_kwargs={"debug":True})
+    result = build_and_capture_stdout(sphinx_build, capsys, srcdir="basic_doc", build_kwargs={"debug": True})
 
     # Original HTML should exist
     original_html = result.html_content("index")

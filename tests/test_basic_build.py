@@ -1,5 +1,7 @@
 """Basic build tests for SimplePDF."""
+
 import pytest
+
 from .utils import build_and_capture_stdout
 
 
@@ -24,14 +26,10 @@ def test_html_generation(sphinx_build, capsys):
 def test_build_with_custom_project_name(sphinx_build, capsys):
     """Test that custom project name is used for PDF filename."""
     project_name = "MyCustomProject"
-    result = build_and_capture_stdout(sphinx_build, capsys,
-        srcdir="basic_doc",
-        confoverrides={"project": project_name}
-    )
+    result = build_and_capture_stdout(sphinx_build, capsys, srcdir="basic_doc", confoverrides={"project": project_name})
 
     assert result.pdf_exists(project_name)
     assert not result.has_warnings("ERROR:")
-
 
 
 def test_rebuild_does_not_fail(sphinx_build):
@@ -47,11 +45,14 @@ def test_rebuild_does_not_fail(sphinx_build):
     assert result2.pdf_exists()
 
 
-@pytest.mark.parametrize("srcdir", [
-    "basic_doc",
-    "with_images",
-    "with_toc",
-])
+@pytest.mark.parametrize(
+    "srcdir",
+    [
+        "basic_doc",
+        "with_images",
+        "with_toc",
+    ],
+)
 def test_various_document_types(sphinx_build, capsys, srcdir):
     """Test that various document types build successfully."""
     result = build_and_capture_stdout(sphinx_build, capsys, srcdir=srcdir)

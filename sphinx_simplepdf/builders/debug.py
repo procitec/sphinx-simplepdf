@@ -1,14 +1,10 @@
-import sys
+from importlib.metadata import version
 import pkgutil
 import platform
-try:
-    from importlib.metadata import version
-except ImportError:
-    from importlib_metadata import version
+import sys
 
 
 class DebugPython:
-
     @property
     def py_exec(self):
         return sys.executable
@@ -21,11 +17,11 @@ class DebugPython:
         final = {}
         for name in names:
             try:
-                __version__ = version(name)
-            except (Exception):
-                final[name] = 'unknown'
+                _package_version = version(name)
+            except Exception:
+                final[name] = "unknown"
             else:
-                final[name] = __version__
+                final[name] = _package_version
 
         return final
 

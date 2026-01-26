@@ -1,6 +1,6 @@
 """Tests for warnings and error handling."""
+
 import pytest
-import re
 
 from .utils import build_and_capture_stdout
 
@@ -49,14 +49,8 @@ def test_strict_mode_handling(sphinx_build, capsys, strict_mode):
     if strict_mode:
         # In strict mode, warnings may cause build to fail
         with pytest.raises((AssertionError, Exception)):
-            sphinx_build(
-                srcdir="with_issues",
-                confoverrides=confoverrides
-            ).build(raise_on_warning=True)
+            sphinx_build(srcdir="with_issues", confoverrides=confoverrides).build(raise_on_warning=True)
     else:
         # Without strict mode, warnings are logged but build succeeds
-        result = build_and_capture_stdout(sphinx_build, capsys,
-            srcdir="with_issues",
-            confoverrides=confoverrides
-        )
+        result = build_and_capture_stdout(sphinx_build, capsys, srcdir="with_issues", confoverrides=confoverrides)
         assert result.pdf_exists()

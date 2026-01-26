@@ -1,18 +1,21 @@
 """Central pytest configuration and fixtures for sphinx-simplepdf tests."""
-from pathlib import Path
-from typing import Any
-import shutil
+
+from __future__ import annotations
+
 import io
+import logging
+from pathlib import Path
 import re
+import shutil
+from typing import Any
 
 import pytest
 from sphinx.application import Sphinx
 from sphinx.testing.util import SphinxTestApp
 from sphinx.util import logging as sphinx_logging
-import logging
-
 
 pytest_plugins = ("sphinx.testing.fixtures",)
+
 
 def copy_srcdir_to_tmpdir(srcdir: Path, tmp: Path) -> Path:
     """
@@ -57,15 +60,15 @@ def content(request):
 class SphinxBuild:
     """Helper class to build Sphinx documentation and access results."""
 
-    def __init__(self, app: Sphinx, src: Path, status, warning):
-        self.app = app
-        self.src = src
-        self.outdir = None
-        self.warnings = []
-        self.errors = []
-        self.status_stream = status
-        self.warning_stream = warning
-        self.debug_output = []
+    def __init__(self, app: Sphinx, src: Path, status: io.StringIO, warning: io.StringIO):
+        self.app: Sphinx = app
+        self.src: Path = src
+        self.outdir: Path | None = None
+        self.warnings: list[str] = []
+        self.errors: list[str] = []
+        self.status_stream: io.StringIO = status
+        self.warning_stream: io.StringIO = warning
+        self.debug_output: list[str] = []
 
     def build(self, force_all: bool = True, raise_on_warning: bool = False, debug: bool = False):
         """
@@ -84,7 +87,7 @@ class SphinxBuild:
             # Eigenen Handler OHNE Sphinx-Filter für Debug
             debug_handler = logging.StreamHandler(debug_buffer)
             debug_handler.setLevel(logging.DEBUG)
-            debug_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+            debug_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
 
             # An Extension-Logger hängen (umgeht Sphinx-Filter!)
             ext_logger = sphinx_logging.getLogger("sphinx_simplepdf")
@@ -102,9 +105,7 @@ class SphinxBuild:
             self.debug_output = debug_buffer.getvalue().splitlines()
 
         if raise_on_warning and self.warnings:
-            raise AssertionError(
-                f"Build produced warnings:\n" + "\n".join(self.warnings)
-            )
+            raise AssertionError("Build produced warnings:\n" + "\n".join(self.warnings))
 
         return self
 
@@ -118,6 +119,9 @@ class SphinxBuild:
         Returns:
             HTML content as string
         """
+        if self.outdir is None:
+            raise RuntimeError("Build not run yet; outdir is not set")
+
         html_file = self.outdir / f"{docname}.html"
         if not html_file.exists():
             raise FileNotFoundError(f"HTML file not found: {html_file}")
@@ -138,14 +142,14 @@ class SphinxBuild:
 
         def strip_log_prefix(text):
             """Entferne Log-Level-Prefixe wie 'DEBUG: ', 'INFO: ' etc."""
-            return re.sub(r'^(DEBUG|INFO|WARNING|ERROR|CRITICAL):\s*', '', text, flags=re.MULTILINE)
+            return re.sub(r"^(DEBUG|INFO|WARNING|ERROR|CRITICAL):\s*", "", text, flags=re.MULTILINE)
 
         # print(f"-- debug output--\n{self.debug_output}\n-----")
         for i, line in enumerate(self.debug_output):
             if "DEBUG HTML START" in line:
                 # Find end marker
                 html_lines = []
-                for next_line in self.debug_output[i+1:]:
+                for next_line in self.debug_output[i + 1 :]:
                     if "DEBUG HTML END" in next_line:
                         break
                     html_lines.append(strip_log_prefix(next_line))
@@ -153,7 +157,7 @@ class SphinxBuild:
 
         raise ValueError("No processed HTML found in debug output")
 
-    def pdf_path(self, basename: str = None) -> Path:
+    def pdf_path(self, basename: str | None = None) -> Path:
         """
         Get path to generated PDF file.
 
@@ -166,12 +170,15 @@ class SphinxBuild:
         if basename is None:
             basename = self.app.config.project
 
+        if self.outdir is None:
+            raise RuntimeError("Build not run yet; outdir is not set")
+
         pdf_file = self.outdir / f"{basename}.pdf"
         if not pdf_file.exists():
             raise FileNotFoundError(f"PDF file not found: {pdf_file}")
         return pdf_file
 
-    def pdf_exists(self, basename: str = None) -> bool:
+    def pdf_exists(self, basename: str | None = None) -> bool:
         """Check if PDF was generated."""
         try:
             self.pdf_path(basename)
@@ -179,7 +186,7 @@ class SphinxBuild:
         except FileNotFoundError:
             return False
 
-    def has_warnings(self, pattern: str = None) -> bool:
+    def has_warnings(self, pattern: str | None = None) -> bool:
         """
         Check if build produced warnings.
 
@@ -193,6 +200,7 @@ class SphinxBuild:
             return len(self.warnings) > 0
 
         import re
+
         regex = re.compile(pattern)
         return any(regex.search(w) for w in self.warnings)
 
@@ -207,6 +215,7 @@ class SphinxBuild:
             List of matching warning messages
         """
         import re
+
         regex = re.compile(pattern)
         return [w for w in self.warnings if regex.search(w)]
 
@@ -226,11 +235,9 @@ def sphinx_build(make_app, tmp_path):
             result = app.build()
             assert result.pdf_exists()
     """
+
     def _make_build(
-        buildername: str = "simplepdf",
-        srcdir: str = None,
-        confoverrides: dict[str, Any] = None,
-        **kwargs
+        buildername: str = "simplepdf", srcdir: str | None = None, confoverrides: dict[str, Any] | None = None, **kwargs
     ) -> SphinxBuild:
         """
         Create and return SphinxBuild instance.
@@ -250,7 +257,7 @@ def sphinx_build(make_app, tmp_path):
         # Resolve source directory using pathlib
         test_root = Path(__file__).parent / "doc_test"
         src_path = test_root / srcdir
-        src_dir = copy_srcdir_to_tmpdir(f"doc_test/{srcdir}", tmp_path)
+        src_dir = copy_srcdir_to_tmpdir(Path("doc_test") / srcdir, tmp_path)
 
         if not src_path.exists():
             raise ValueError(f"Test document directory not found: {src_path}")
@@ -266,8 +273,8 @@ def sphinx_build(make_app, tmp_path):
             status=status,
             warning=warning,
             confoverrides=confoverrides or {},
-            freshenv = True,
-            **kwargs
+            freshenv=True,
+            **kwargs,
         )
         return SphinxBuild(app, src_path, status, warning)
 
@@ -281,19 +288,13 @@ def sphinx_build_factory(tmp_path, rootdir):
 
     More flexible than sphinx_build for tests that need multiple builds.
     """
-    def _factory(
-        srcdir: str,
-        buildername: str = "simplepdf",
-        **kwargs
-    ):
+
+    def _factory(srcdir: str, buildername: str = "simplepdf", **kwargs):
         src = rootdir / srcdir
-        app = SphinxTestApp(
-            buildername=buildername,
-            srcdir=src,
-            freshenv=True,
-            **kwargs
-        )
-        return SphinxBuild(app, src)
+        app = SphinxTestApp(buildername=buildername, srcdir=src, freshenv=True, **kwargs)
+        status = io.StringIO()
+        warning = io.StringIO()
+        return SphinxBuild(app, src, status, warning)
 
     return _factory
 

@@ -1,0 +1,4 @@
+sphinx==8.2.3
+sphinxcontrib-plantuml==0.31
+sphinx-needs==6.2.0
+sphinx-copybutton

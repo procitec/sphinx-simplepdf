@@ -9,8 +9,8 @@ A sphinx theme, called ``sphinx-simplepdf``. Files under ``/themes/sphinx_simple
 During package installation, builder and theme get registered for Sphinx. This is done via the ``enytry__points``
 mechanism.
 
-.. literalinclude:: ../setup.py
-   :lines: 32-39
+.. literalinclude:: ../pyproject.toml
+   :lines: 41-45
 
 Workflow
 --------
