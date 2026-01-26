@@ -51,7 +51,9 @@ jobs:
       - name: Install docs dependencies
         run: uv sync --group docs
       - name: Build docs (${{ matrix.target }})
-        run: uv run sphinx-build -M ${{ matrix.builder }} docs docs/_build
+        run: |
+          uv run sphinx-build -M simplepdf demo demo/_build
+          uv run sphinx-build -M ${{ matrix.builder }} docs docs/_build
         shell: bash
         env:
           PATH: ${{ runner.os == 'Windows' && 'C:\msys64\mingw64\bin;' || '' }}${{ env.PATH }}
