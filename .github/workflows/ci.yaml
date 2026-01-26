@@ -50,9 +50,9 @@ jobs:
         run: uv python install ${{ matrix.python }}
       - name: Install docs dependencies
         run: uv sync --group docs
+        working-directory: .
       - name: Build docs (${{ matrix.target }})
         run: |
-          uv run sphinx-build -M ${{ matrix.builder }} demo demo/_build
           uv run sphinx-build -M ${{ matrix.builder }} docs docs/_build
         shell: bash
         env:
