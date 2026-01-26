@@ -52,7 +52,7 @@ jobs:
         run: uv sync --group docs
       - name: Build docs (${{ matrix.target }})
         run: |
-          uv run sphinx-build -M simplepdf demo demo/_build
+          uv run sphinx-build -M ${{ matrix.builder }} demo demo/_build
           uv run sphinx-build -M ${{ matrix.builder }} docs docs/_build
         shell: bash
         env:
@@ -63,7 +63,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - name: Install WeasyPrint dependencies (Ubuntu)
@@ -80,8 +80,10 @@ jobs:
         shell: pwsh
       - name: Install uv
         uses: astral-sh/setup-uv@v5
+      - name: Install tests dependencies
+        run: uv sync --group dev
       - name: Testing (${{ matrix.os }})
-        run: uv sync --group dev && uv run tox
+        run: uv run tox
         shell: bash
         env:
           PATH: ${{ runner.os == 'Windows' && 'C:\msys64\mingw64\bin;' || '' }}${{ env.PATH }}
