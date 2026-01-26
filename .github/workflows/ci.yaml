@@ -55,11 +55,40 @@ jobs:
         shell: bash
         env:
           PATH: ${{ runner.os == 'Windows' && 'C:\msys64\mingw64\bin;' || '' }}${{ env.PATH }}
+  tests:
+    name: tests-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install WeasyPrint dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev libcairo2
+      - name: Install WeasyPrint dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install pango libffi
+      - name: Install WeasyPrint dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $env:PATH = "C:\msys64\mingw64\bin;$env:PATH"
+          C:\msys64\usr\bin\pacman -S --noconfirm mingw-w64-x86_64-pango mingw-w64-x86_64-gdk-pixbuf2
+        shell: pwsh
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Testing (${{ matrix.os }})
+        run: uv sync --group dev && uv run tox
+        shell: bash
+        env:
+          PATH: ${{ runner.os == 'Windows' && 'C:\msys64\mingw64\bin;' || '' }}${{ env.PATH }}
   all_good:
     if: ${{ !cancelled() }}
     needs:
       - pre-commit
       - docs
+      - tests
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
