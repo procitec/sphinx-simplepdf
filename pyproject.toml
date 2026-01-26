@@ -120,7 +120,6 @@ legacy_tox_ini = """
 env_list =
     lint
     py{311,312,313}-sphinx{74,81} #82 not working, see https://github.com/sphinx-doc/sphinx/pull/13739
-    demo
 requires =
     tox>=4
     tox-uv>=1.0
@@ -170,15 +169,6 @@ deps =
 commands =
     ruff check sphinx_simplepdf/
     ruff format --check sphinx_simplepdf/
-
-[testenv:demo]
-description = Build demo with Sphinx
-basepython = python3.12
-deps =
-    sphinx>=7.0,<8.2
-extras = demo
-commands =
-    sphinx-build -a -E -j auto -b simplepdf demo/ demo/_build
 
 """
 
