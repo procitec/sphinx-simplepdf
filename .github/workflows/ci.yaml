@@ -42,7 +42,6 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           C:\msys64\usr\bin\bash -lc 'pacman -S mingw-w64-x86_64-ttf-dejavu mingw-w64-x86_64-pango mingw-w64-x86_64-ghostscript --noconfirm'
-          echo "WEASYPRINT_DLL_DIRECTORIES=/c/msys64/mingw64/bin" >> $GITHUB_ENV
         env:
           PATH: C:\msys64\mingw64\bin;${{ env.PATH }}
       - name: Install uv
@@ -57,6 +56,7 @@ jobs:
           uv run sphinx-build -M ${{ matrix.builder }} docs docs/_build
         env:
           PATH: ${{ runner.os == 'Windows' && 'C:\msys64\mingw64\bin;' || '' }}${{ env.PATH }}
+          WEASYPRINT_DLL_DIRECTORIES: ${{ runner.os == 'Windows' && 'C:\msys64\mingw64\bin;' || '' }}
   tests:
     name: tests-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
