@@ -54,7 +54,8 @@ jobs:
         run: uv run sphinx-build -M ${{ matrix.builder }} docs docs/_build
         shell: bash
         env:
-          PATH: ${{ runner.os == 'Windows' && 'C:\msys64\mingw64\bin;' || '' }}${{ env.PATH }}  tests:
+          PATH: ${{ runner.os == 'Windows' && 'C:\msys64\mingw64\bin;' || '' }}${{ env.PATH }}
+  tests:
     name: tests-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
