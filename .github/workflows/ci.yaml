@@ -41,23 +41,20 @@ jobs:
       - name: Install WeasyPrint dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
-          C:\msys64\usr\bin\bash -lc 'pacman -S mingw-w64-x86_64-ttf-dejavu mingw-w64-x86_64-pango mingw-w64-x86_64-ghostscript --noconfirm'
-        env:
-          PATH: C:\msys64\mingw64\bin;${{ env.PATH }}
+          $env:PATH = "C:\msys64\mingw64\bin;$env:PATH"
+          C:\msys64\usr\bin\pacman -S --noconfirm mingw-w64-x86_64-pango mingw-w64-x86_64-gdk-pixbuf2
+        shell: pwsh
       - name: Install uv
         uses: astral-sh/setup-uv@v5
       - name: Set up Python
         run: uv python install ${{ matrix.python }}
       - name: Install docs dependencies
         run: uv sync --group docs
-        working-directory: .
       - name: Build docs (${{ matrix.target }})
-        run: |
-          uv run sphinx-build -M ${{ matrix.builder }} docs docs/_build
+        run: uv run sphinx-build -M ${{ matrix.builder }} docs docs/_build
+        shell: bash
         env:
-          PATH: ${{ runner.os == 'Windows' && 'C:\msys64\mingw64\bin;' || '' }}${{ env.PATH }}
-          WEASYPRINT_DLL_DIRECTORIES: ${{ runner.os == 'Windows' && 'C:\msys64\mingw64\bin;' || '' }}
-  tests:
+          PATH: ${{ runner.os == 'Windows' && 'C:\msys64\mingw64\bin;' || '' }}${{ env.PATH }}  tests:
     name: tests-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
