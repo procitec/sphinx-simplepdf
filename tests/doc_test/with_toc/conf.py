@@ -9,3 +9,4 @@ simplepdf_theme = "simplepdf_theme"
 simplepdf_toc = True
 html_css_files = ["custom.css"]
 html_static_path = ["_static"]
+html_show_sphinx = False
