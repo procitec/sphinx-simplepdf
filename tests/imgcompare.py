@@ -10,7 +10,7 @@ from skimage.metrics import structural_similarity as ssim
 
 
 # -----------------------------
-# PDF -> PNG-Seiten mit PyMuPDF
+# PDF -> PNG pages with PyMuPDF
 # -----------------------------
 def pdf_to_pngs(
     pdf_path: str | Path,
@@ -18,9 +18,9 @@ def pdf_to_pngs(
     dpi: int = 300,
 ) -> list[Path]:
     """
-    Rendert alle Seiten eines PDFs als PNG-Dateien mittels PyMuPDF.
+    Render all pages of a PDF as PNG files using PyMuPDF.
 
-    Gibt eine sortierte Liste der erzeugten PNG-Pfade zurück.
+    Returns a sorted list of the generated PNG file paths.
     """
     pdf_path = Path(pdf_path)
     out_dir = Path(out_dir)
@@ -29,8 +29,8 @@ def pdf_to_pngs(
     doc = fitz.open(str(pdf_path))
     images: list[Path] = []
 
-    # Zoom-Faktor so wählen, dass ungefähr gewünschtes DPI erreicht wird.
-    # Standard-PDF-Resolution ~72 dpi → zoom = dpi / 72
+    # Choose zoom factor so that the target DPI is approximated.
+    # Default PDF resolution is ~72 dpi → zoom = dpi / 72
     zoom = dpi / 72.0
     mat = fitz.Matrix(zoom, zoom)
 
@@ -38,7 +38,7 @@ def pdf_to_pngs(
         page = doc.load_page(page_index)
         pix = page.get_pixmap(matrix=mat, alpha=False)
         out_path = out_dir / f"{pdf_path.stem}_{page_index + 1:03d}.png"
-        # direkt als PNG speichern
+        # Save directly as PNG
         pix.pil_save(str(out_path), format="PNG", optimize=False)
         images.append(out_path)
 
@@ -47,7 +47,7 @@ def pdf_to_pngs(
 
 
 # -----------------------------
-# Bildvergleich (SSIM auf Grau)
+# Image comparison (SSIM on gray)
 # -----------------------------
 def load_gray(path: str | Path) -> np.ndarray:
     img = cv2.imread(str(path), cv2.IMREAD_GRAYSCALE)
@@ -126,7 +126,7 @@ def save_debug_images(
 
 
 # -----------------------------
-# Gesamtworkflow: PDFs -> PNG -> Vergleich
+# Full workflow: PDFs -> PNG -> comparison
 # -----------------------------
 def compare_pdfs(
     ref_pdf: str | Path,
@@ -135,11 +135,13 @@ def compare_pdfs(
     dpi: int = 300,
     ssim_threshold: float = 0.99,
     changed_ratio_threshold: float = 0.001,
+    pages: slice | None = None,
 ) -> bool:
     """
-    Vergleicht zwei PDFs seitenweise.
+    Compare two PDFs page by page.
 
-    Rückgabewert: True, wenn alle Seiten innerhalb der Toleranzen liegen.
+    If `pages` is given, only the selected page indices (0-based) are compared.
+    Example: pages=slice(1, 3) compares pages 1 and 2.
     """
     work_dir = Path(work_dir)
     ref_dir = work_dir / "ref"
@@ -154,7 +156,17 @@ def compare_pdfs(
         print(f"[ERROR] Page count mismatch: ref={len(ref_pages)}, test={len(test_pages)}")
         return False
 
+    # Apply slice if given (0-based indices)
+    if pages is not None:
+        ref_pages = ref_pages[pages]
+        test_pages = test_pages[pages]
+        print(f"[INFO] Restricting comparison to pages slice {pages}")
+
     all_ok = True
+
+    if len(ref_pages) == 0:
+        print("[ERROR] No page selected for reference")
+        return False
 
     for ref_img, test_img in zip(ref_pages, test_pages, strict=True):
         page_name = ref_img.name

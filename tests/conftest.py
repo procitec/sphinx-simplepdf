@@ -195,13 +195,21 @@ class SphinxBuild:
         except FileNotFoundError:
             return False
 
-    def compare_pdf(self, ref_pdf: Path, changed_ratio_threshold: float = 0.001) -> bool:
+    def compare_pdf(
+        self,
+        ref_pdf: Path,
+        pages: slice | None = None,
+        changed_ratio_threshold: float = 0.001,
+        ssim_threshold: float = 0.99,
+    ) -> bool:
         if self.outdir is not None:
             return compare_pdfs(
                 ref_pdf=ref_pdf,
+                pages=pages,
                 test_pdf=self.pdf_path(),
                 work_dir=Path(self.outdir.parent / "png"),
                 changed_ratio_threshold=changed_ratio_threshold,
+                ssim_threshold=ssim_threshold,
             )
         else:
             return False
