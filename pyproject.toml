@@ -55,6 +55,9 @@ dev = [
   "tox-uv>=1.0",
   "ruff>=0.4.0",
   "pdfminer.six>=20220319",
+  "PyMuPDF>=1.24.0",        # PDF -> Image for comparison
+  "opencv-python>=4.8.0",   # cv2 for image processing
+  "scikit-image>=0.22.0",   # ssim from skimage.metrics
 ]
 docs = [
   "sphinx>=7.0,<8.2",
@@ -138,6 +141,9 @@ deps =
     sphinx>=7.4,<7.5
     pytest
     pdfminer.six>=20220319
+    PyMuPDF>=1.24.0
+    opencv-python>=4.8.0
+    scikit-image>=0.22.0
     sphinx-simplepdf @ .
 commands =
     pytest {posargs:tests/}
@@ -147,6 +153,9 @@ deps =
     sphinx>=8.1,<8.2
     pytest
     pdfminer.six>=20220319
+    PyMuPDF>=1.24.0
+    opencv-python>=4.8.0
+    scikit-image>=0.22.0
     sphinx-simplepdf @ .
 commands =
     pytest {posargs:tests/}
@@ -156,6 +165,9 @@ deps =
     sphinx>=8.2,<8.3
     pytest
     pdfminer.six>=20220319
+    PyMuPDF>=1.24.0
+    opencv-python>=4.8.0
+    scikit-image>=0.22.0
     sphinx-simplepdf @ .
 commands =
     pytest {posargs:tests/}

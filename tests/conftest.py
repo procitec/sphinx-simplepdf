@@ -14,6 +14,8 @@ from sphinx.application import Sphinx
 from sphinx.testing.util import SphinxTestApp
 from sphinx.util import logging as sphinx_logging
 
+from .imgcompare import compare_pdfs
+
 pytest_plugins = ("sphinx.testing.fixtures",)
 
 
@@ -40,6 +42,12 @@ def copy_srcdir_to_tmpdir(srcdir: Path, tmp: Path) -> Path:
 def rootdir():
     """Root directory for test documentation projects."""
     return Path(__file__).parent / "doc_test"
+
+
+@pytest.fixture(scope="session")
+def refdir():
+    """Root directory for test documentation projects."""
+    return Path(__file__).parent / "ref_pdfs"
 
 
 @pytest.fixture
@@ -69,6 +77,7 @@ class SphinxBuild:
         self.status_stream: io.StringIO = status
         self.warning_stream: io.StringIO = warning
         self.debug_output: list[str] = []
+        self.pngs: list[Path] = []
 
     def build(self, force_all: bool = True, raise_on_warning: bool = False, debug: bool = False):
         """
@@ -184,6 +193,17 @@ class SphinxBuild:
             self.pdf_path(basename)
             return True
         except FileNotFoundError:
+            return False
+
+    def compare_pdf(self, ref_pdf: Path, changed_ratio_threshold: float = 0.001) -> bool:
+        if self.outdir is not None:
+            return compare_pdfs(
+                ref_pdf=ref_pdf,
+                test_pdf=self.pdf_path(),
+                work_dir=Path(self.outdir.parent / "png"),
+                changed_ratio_threshold=changed_ratio_threshold,
+            )
+        else:
             return False
 
     def has_warnings(self, pattern: str | None = None) -> bool:
