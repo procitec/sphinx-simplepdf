@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "sphinx-simplepdf"
-version = "1.7.0post1"
+version = "1.7.0.post2"
 description = "An easy to use PDF Builder for Sphinx with a modern PDF-Theme."
 readme = "README.rst"
 license = { text = "MIT" }
@@ -27,7 +27,8 @@ classifiers = [
 dependencies = [
   "pre-commit>=3.5",
   "sphinx>=7.0",
-  "weasyprint==67.0",
+  "weasyprint==62.3",
+  "pydyf==0.11.0",
   "libsass",
   "beautifulsoup4",
   "packaging>=20.0",  # Modern replacement for pkg_resources.parse_version
